@@ -3,7 +3,7 @@
 //  Sudoku
 //
 //  Created by cpsfaculty on 10/10/14.
-//  Copyright (c) 2014 ___Ju Shen___. All rights reserved.
+//  Copyright (c) 2014 ___xiaotian yang___. All rights reserved.
 //
 
 #ifndef Sudoku_CSP_h
@@ -88,7 +88,7 @@ public:
     CSP();
     ~CSP();
 	void updateDomain(State state); //for forward checking used. Based on current setting, update the domain.
-    void arcConsistency(const State state); //similar to the updateDomain() in the forward checking, this unction is stronger for arcChecking use
+    void arcConsistency(const State state); //similar to the updateDomain() in the forward checking, this function is stronger for arcChecking use
     bool goalCheck(const State state);
     void setData(int *data);
     int goBack(int *chosen_cell);

@@ -3,7 +3,7 @@
 //  Sudoku
 //
 //  Created by cpsfaculty on 10/10/14.
-//  Copyright (c) 2014 ___Ju Shen___. All rights reserved.
+//  Copyright (c) 2014 ___xiaotian yang___. All rights reserved.
 //
 
 #include <stdio.h>
@@ -15,9 +15,35 @@
 /*Check whether current state satisfy the constraints*/
 bool CSP::goalCheck(const State state)
 {
-
-    
-    return false;
+    for (int i=0; i< 81;i++)
+    {
+        int row = i / 9;
+        int col = i % 9;
+        if (row==0||col==0) {
+            int j;
+            for(j = 0; j < 9; j++){
+                if(state.values[row][j] == state.values[row][col] && j != col){
+                    return false;
+                }
+                if(state.values[j][col] == state.values[row][col] && j != row){
+                    return false;
+                }
+            }
+        }
+        
+        if ((row==0||row==3||row==6)&&(col==0||col==3||col==6)) {
+            int tempRow = row / 3 * 3;
+            int tempCol = col / 3 * 3;
+            for(int j = tempRow; j < tempRow + 3;j++){
+                for(int k = tempCol; k < tempCol + 3; k++){
+                    if(state.values[j][k] == state.values[row][col] && j != row && k != col){
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+        return true;
 }
 
 
@@ -25,19 +51,192 @@ bool CSP::goalCheck(const State state)
 /*Update Domain for the forward checking*/
 void CSP::updateDomain(const State state)
 {
-  
+    //for all the cells
+    for (int i=0; i< 81;i++)
+    {
+        int row = i / 9;
+        int col = i % 9;
+        if (state.values[row][col]!=0) {    //if the value is assigned
+            int temp=state.values[row][col];
+            for(int j = 0; j < 9; j++)
+            {
+                if(state.values[row][j] == 0&&j!=col)   //check the cells on the same row
+                {
+                    auto iter=std::find(variables[row][j].domain.begin(),
+                                        variables[row][j].domain.end(),
+                                        temp);
+                    if (iter!=variables[row][j].domain.end())
+                    {
+                        variables[row][j].domain.erase(iter);
+                    }
+                }
+                if (state.values[j][col]==0&&j!=row)
+                {
+                    auto iter=std::find(variables[j][col].domain.begin(),
+                                        variables[j][col].domain.end(),
+                                        temp);
+                    if (iter!=variables[j][col].domain.end())
+                    {
+                            variables[j][col].domain.erase(iter);
+                    }
+                }
+            }
+                int tempRow = row / 3 * 3;
+                int tempCol = col / 3 * 3;
+                for(int j = tempRow; j < tempRow + 3;j++){
+                    for(int k = tempCol; k < tempCol + 3; k++){
+                        if(state.values[j][k]==0)
+                        {
+                            auto iter=std::find(variables[j][k].domain.begin(),
+                                                variables[j][k].domain.end(),
+                                                temp);
+                            if (iter!=variables[j][k].domain.end()) {
+                                variables[j][k].domain.erase(iter);
+                        }
+                    }
+                }
+            }
+        }
+        if (state.values[row][col]==0) {
+            int temp;
+            variables[row][col].domain.clear();
+                for (int i=1; i<10; i++) {
+                    
+                    variables[row][col].domain.push_back(i);
+                }
+            if(random == 1)
+                reshuffleDomain();
+                for(int j = 0; j < 9; j++)
+                {
+                    if(state.values[row][j] != 0 && j!=col)   //check the cells on the same row
+                    {
+                        temp=state.values[row][j];
+                        auto iter=std::find(variables[row][col].domain.begin(),
+                                            variables[row][col].domain.end(),
+                                            temp);
+                        if (iter!=variables[row][col].domain.end())
+                        {
+                            variables[row][col].domain.erase(iter);
+                        }
+                    }
+                    if (state.values[j][col]!=0&&j!=row)
+                    {
+                        temp=state.values[j][col];
+                        auto iter=std::find(variables[row][col].domain.begin(),
+                                            variables[row][col].domain.end(),
+                                            temp);
+                        if (iter!=variables[row][col].domain.end())
+                        {
+                            variables[row][col].domain.erase(iter);
+                        }
+                    }
+                }
+                int tempRow = row / 3 * 3;
+                int tempCol = col / 3 * 3;
+                for(int j = tempRow; j < tempRow + 3;j++){
+                    for(int k = tempCol; k < tempCol + 3; k++){
+                        if(state.values[j][k]!=0)
+                        {
+                            temp=state.values[j][k];
+                            auto iter=std::find(variables[row][col].domain.begin(),
+                                                variables[row][col].domain.end(),
+                                                temp);
+                            if (iter!=variables[row][col].domain.end()) {
+                                variables[row][col].domain.erase(iter);
+                            }
+                        }
+                    }
+                }
+        }
+    }
 }
-
 
 
 /*Arc consistency use*/
 void CSP::arcConsistency(const State state)
 {
+    updateDomain(state);
+    queue<Arrow> q;
+    for (int i=0; i<81; i++) {
+        int row=i/9;
+        int col=i%9;
+        for (int j=0; j<9; j++) {
+            if (j!=row) {
+                Arrow temp=Arrow(i, 9*j+col);
+                q.push(temp);
+            }
+            if (j!=col) {
+                Arrow temp=Arrow(i,9*row+j);
+                q.push(temp);
+            }
+        }
+        int tempRow = row / 3 * 3;
+        int tempCol = col / 3 * 3;
+        for(int l = tempRow; l < tempRow + 3;l++){
+            for(int k = tempCol; k < tempCol + 3; k++){
+                if (l!=row&&k!=col) {
+                    Arrow temp=Arrow(i, l*9+k);
+                    q.push(temp);
+                    }
+                }
+            }
+        }
+    //cout<<q.size()<<endl;
+    while (!q.empty()) {
+        Arrow arrow=q.front();
+        q.pop();
+        bool delete_sign=0;
+        int row_tail=arrow.tail/9;
+        int col_tail=arrow.tail%9;
+        int row_head=arrow.head/9;
+        int col_head=arrow.head%9;
+        if (state.values[row_tail][col_tail]==0) {
+            for (int x=0;x<variables[row_tail][col_tail].domain.size();x++)
+            {
+                int avail=0;
+                for (int y=0;y<variables[row_head][col_head].domain.size();
+                     y++) {
+                    if (variables[row_tail][col_tail].domain[x]!=variables[row_head][col_head].domain[y]) {
+                        avail=1;
+                        break;
+                    }
+                }
+                if ( avail==0) {
+                    delete_sign=1;
+                    variables[row_tail][col_tail].domain.erase(std::find(variables[row_tail][col_tail].domain.begin(), variables[row_tail][col_tail].domain.end(), variables[row_tail][col_tail].domain[x]));
+                    x--;
+                }
 
+        }
+        if (delete_sign==1) {
+            for (int j=0; j<9; j++) {
+                if (j!=row_tail) {
+                    Arrow temp=Arrow( arrow.tail,9*j+col_tail);
+                    q.push(temp);
+                }
+                if (j!=col_tail) {
+                    Arrow temp=Arrow(arrow.tail,9*row_tail+j);
+                    q.push(temp);
+                }
+                int tempRow = row_tail / 3 * 3;
+                int tempCol = col_tail / 3 * 3;
+                for(int l = tempRow; l < tempRow + 3;l++){
+                    for(int k = tempCol; k < tempCol + 3; k++){
+                        if (l!=row_tail&&k!=col_tail) {
+                            Arrow temp=Arrow( arrow.tail,l*9+k);
+                            q.push(temp);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 }
 
 
-/************************************************	End of Assignment ***********************************************/
+/************************************************
+ End of Assignment ***********************************************/
 
 
 

@@ -3,7 +3,7 @@
 //  Sudoku
 //
 //  Created by cpsfaculty on 10/8/14.
-//  Copyright (c) 2014 ___Ju Shen___. All rights reserved.
+//  Copyright (c) 2014 ___xiaotian yang___. All rights reserved.
 //
 
 #ifndef __Sudoku__VisualDisplay__
